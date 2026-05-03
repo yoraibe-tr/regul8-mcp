@@ -1,13 +1,15 @@
 # Regul8 MCP
 
-Model Context Protocol server for [Regul8](https://base44.app) on Base44: list channels, regulations, countries, and products, then submit marketing content to `processBulkSubmissions` for AI compliance analysis.
+[![CI](https://github.com/yoraibe-tr/regul8-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yoraibe-tr/regul8-mcp/actions/workflows/ci.yml)
 
-API shapes match [API_REFERENCE 4.md](./API_REFERENCE%204.md).
+[Model Context Protocol](https://modelcontextprotocol.io) (stdio) server for **Regul8** on [Base44](https://base44.app): list channels, regulations, countries, and products, then submit marketing content to `processBulkSubmissions` for AI compliance analysis.
+
+Payloads and responses follow [docs/API_REFERENCE.md](./docs/API_REFERENCE.md).
 
 ## Prerequisites
 
 - Node.js 18+
-- A Regul8 Base44 app id and a user email/password (same as the API reference)
+- A Regul8 Base44 app id and a user email/password (see API reference)
 
 ## Install and build
 
@@ -18,7 +20,7 @@ npm install
 npm run build
 ```
 
-Copy [.env.example](./.env.example) and set variables, **or** configure the same keys in Cursor / Claude (recommended for secrets).
+Configure credentials via a local `.env` file (see [.env.example](./.env.example)) **or** inline `env` in your MCP client. Never commit real secrets.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -41,18 +43,16 @@ Copy [.env.example](./.env.example) and set variables, **or** configure the same
 
 ## Cursor
 
-1. **Settings → MCP → Add server** (or edit your MCP config JSON).
-2. Use **command** `node` with **args** including the absolute path to `dist/index.js` in this repo.
-3. Add **environment** entries for `REGUL8_APP_ID`, `REGUL8_USER_EMAIL`, `REGUL8_USER_PASSWORD`, and optionally `REGUL8_APP_BASE_URL` / `REGUL8_SERVER_URL`.
+This repo includes [`.cursor/mcp.json`](./.cursor/mcp.json) using `envFile: ${workspaceFolder}/.env`. After `npm run build`, open the folder in Cursor, add your `.env` from `.env.example`, and enable the **regul8** MCP server.
 
-Example (adjust paths for your machine):
+For a global or manual config, use `node` with an absolute path to `dist/index.js` and the same environment variables:
 
 ```json
 {
   "mcpServers": {
     "regul8": {
       "command": "node",
-      "args": ["C:/Users/Yoraibe/Regul8MCP/dist/index.js"],
+      "args": ["/absolute/path/to/regul8-mcp/dist/index.js"],
       "env": {
         "REGUL8_APP_ID": "your-app-id",
         "REGUL8_USER_EMAIL": "you@example.com",
@@ -68,7 +68,7 @@ Restart Cursor or reload MCP after changes.
 
 ## Claude Desktop
 
-Edit Claude’s MCP configuration file (location varies by OS; see Anthropic’s *Connect Claude Desktop to local MCP servers* guide). Add a server block with the same `command`, `args`, and `env` as above, then restart Claude Desktop.
+Add a server entry with the same `command`, `args`, and `env` as above (see Anthropic’s guide to *local MCP servers*). Paths must be absolute on your machine. Restart Claude Desktop after editing the config.
 
 ## Run locally (stdio)
 
@@ -76,14 +76,21 @@ Edit Claude’s MCP configuration file (location varies by OS; see Anthropic’s
 npm run start
 ```
 
-The process waits on stdin; it is normally started by Cursor or Claude, not run interactively.
+The process reads JSON-RPC on stdin; it is meant to be spawned by an MCP host, not used interactively.
 
-## Sharing
+## Repository layout
 
-Publish the repository on GitHub. Others clone, `npm install`, `npm run build`, and point their MCP client at their own built `dist/index.js` with **their** env vars. Do not commit `.env` or real credentials.
+| Path | Purpose |
+|------|---------|
+| `src/index.ts` | MCP server and tool registrations |
+| `src/regul8-client.ts` | Base44 auth, client cache, retries |
+| `docs/API_REFERENCE.md` | Regul8 HTTP/SDK reference |
+| `.cursor/mcp.json` | Example Cursor MCP wiring |
 
-Optional next step: publish to npm and expose a `bin` entry so users can run via `npx` without cloning.
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
-MIT
+[MIT](./LICENSE)
