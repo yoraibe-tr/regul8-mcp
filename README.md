@@ -12,8 +12,8 @@ API shapes match [API_REFERENCE 4.md](./API_REFERENCE%204.md).
 ## Install and build
 
 ```bash
-git clone <your-repo-url>
-cd Regul8MCP
+git clone https://github.com/yoraibe-tr/regul8-mcp.git
+cd regul8-mcp
 npm install
 npm run build
 ```
