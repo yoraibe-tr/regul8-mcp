@@ -9,3 +9,5 @@ Thumbs.db
 *.tsbuildinfo
 .idea/
 coverage/
+.wrangler/
+.dev.vars

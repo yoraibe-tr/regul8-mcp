@@ -2,7 +2,10 @@
 
 [![CI](https://github.com/yoraibe-tr/regul8-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/yoraibe-tr/regul8-mcp/actions/workflows/ci.yml)
 
-[Model Context Protocol](https://modelcontextprotocol.io) (stdio) server for **Regul8** on [Base44](https://base44.app): list channels, regulations, countries, and products, then submit marketing content to `processBulkSubmissions` for AI compliance analysis.
+[Model Context Protocol](https://modelcontextprotocol.io) server for **Regul8** on [Base44](https://base44.app): list channels, regulations, countries, and products, then submit marketing content to `processBulkSubmissions` for AI compliance analysis.
+
+- **Local:** stdio transport (`npm run start`) for Cursor / Claude Desktop.
+- **Remote PoC:** [Cloudflare Workers](https://developers.cloudflare.com/workers/) + [streamable HTTP](https://modelcontextprotocol.io/specification/draft/basic/transports/#streamable-http) via [`agents/mcp`](https://developers.cloudflare.com/agents/model-context-protocol/mcp-handler-api/) (`npm run deploy:worker`).
 
 Payloads and responses follow [docs/API_REFERENCE.md](./docs/API_REFERENCE.md).
 
@@ -78,13 +81,38 @@ npm run start
 
 The process reads JSON-RPC on stdin; it is meant to be spawned by an MCP host, not used interactively.
 
+## Cloudflare Worker (hosted MCP)
+
+Uses `nodejs_compat` (Base44 SDK / axios) and exposes MCP at **`POST /mcp`** (streamable HTTP). `GET /` returns a small JSON discovery payload.
+
+1. Install deps and typecheck: `npm install` (Wrangler is a dev dependency).
+2. Authenticate once: `npx wrangler login`.
+3. Set secrets (same names as env vars):
+
+   ```bash
+   npx wrangler secret put REGUL8_APP_ID
+   npx wrangler secret put REGUL8_USER_EMAIL
+   npx wrangler secret put REGUL8_USER_PASSWORD
+   ```
+
+   Optionally set plain vars in [`wrangler.jsonc`](./wrangler.jsonc) under `[vars]` for `REGUL8_SERVER_URL` / `REGUL8_APP_BASE_URL`, or add more secrets.
+
+4. Deploy: `npm run deploy:worker`
+5. Local dev: copy [.dev.vars.example](./.dev.vars.example) to `.dev.vars`, fill values, then `npm run dev:worker`.
+
+**PoC notes:** Compliance calls can take several seconds; ensure your Workers plan and [limits](https://developers.cloudflare.com/workers/platform/limits/) fit your latency needs. This Worker is single-tenant (one set of Regul8 credentials per deployment).
+
 ## Repository layout
 
 | Path | Purpose |
 |------|---------|
-| `src/index.ts` | MCP server and tool registrations |
+| `src/index.ts` | Stdio entry (local MCP) |
+| `src/worker.ts` | Cloudflare Worker + HTTP MCP |
+| `src/create-regul8-mcp-server.ts` | Shared `McpServer` and tools |
+| `src/regul8-context.ts` | Env parsing + AsyncLocalStorage for Worker requests |
 | `src/regul8-client.ts` | Base44 auth, client cache, retries |
 | `docs/API_REFERENCE.md` | Regul8 HTTP/SDK reference |
+| `wrangler.jsonc` | Worker deploy config |
 | `.cursor/mcp.json` | Example Cursor MCP wiring |
 
 ## Contributing

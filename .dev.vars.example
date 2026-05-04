@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `wrangler dev` (never commit .dev.vars)
+REGUL8_APP_ID=
+REGUL8_USER_EMAIL=
+REGUL8_USER_PASSWORD=
+# REGUL8_SERVER_URL=https://base44.app
+# REGUL8_APP_BASE_URL=https://your-app.base44.app

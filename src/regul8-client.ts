@@ -1,38 +1,5 @@
 import { Base44Error, createClient, type Base44Client } from "@base44/sdk";
-
-export type Regul8Env = {
-  appId: string;
-  email: string;
-  password: string;
-  serverUrl: string;
-  appBaseUrl: string | undefined;
-};
-
-export function readRegul8Env(): Regul8Env {
-  const appId = process.env.REGUL8_APP_ID?.trim();
-  const email = process.env.REGUL8_USER_EMAIL?.trim();
-  const password = process.env.REGUL8_USER_PASSWORD;
-  const serverUrl = process.env.REGUL8_SERVER_URL?.trim() || "https://base44.app";
-  const appBaseUrlRaw = process.env.REGUL8_APP_BASE_URL?.trim();
-
-  if (!appId) {
-    throw new Error("Missing REGUL8_APP_ID (Base44 application ID).");
-  }
-  if (!email) {
-    throw new Error("Missing REGUL8_USER_EMAIL.");
-  }
-  if (password === undefined || password === "") {
-    throw new Error("Missing REGUL8_USER_PASSWORD.");
-  }
-
-  return {
-    appId,
-    email,
-    password,
-    serverUrl,
-    appBaseUrl: appBaseUrlRaw || undefined,
-  };
-}
+import { getRegul8Env } from "./regul8-context.js";
 
 let clientPromise: Promise<Base44Client> | null = null;
 
@@ -41,7 +8,7 @@ export function resetRegul8Client(): void {
 }
 
 async function createLoggedInClient(): Promise<Base44Client> {
-  const env = readRegul8Env();
+  const env = getRegul8Env();
   const client = createClient({
     appId: env.appId,
     serverUrl: env.serverUrl,
